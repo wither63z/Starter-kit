@@ -1,29 +1,50 @@
-/*
-  ESP32 LED Blink Test
-  Hecho para probar si la carga del código funciona correctamente.
-*/
 #include <Arduino.h>
 
-// La mayoría de las placas ESP32 tienen el LED interno en el GPIO 2
-const int LED_PIN = 2; 
+// GPIO de control de los cuatro relés
+const int relayA = 16;
+const int relayB = 17;
+const int relayC = 18;
+const int relayD = 19;
+
+// El módulo de relés se considera activo en LOW
+const int RELAY_ON = LOW;
+const int RELAY_OFF = HIGH;
+
+const unsigned long interval = 2000;
+
+const int relays[] = {relayA, relayB, relayC, relayD};
+const char* names[] = {"A", "B", "C", "D"};
+
+void allOff() {
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(relays[i], RELAY_OFF);
+  }
+}
 
 void setup() {
-  // Inicializa el puerto serie para ver mensajes en el monitor
   Serial.begin(115200);
-  Serial.println("--- ESP32 Listo para la prueba de parpadeo ---");
-  
-  // Configura el pin del LED como salida
-  pinMode(LED_PIN, OUTPUT);
+
+  for (int i = 0; i < 4; i++) {
+    // Fija primero el nivel inactivo para evitar pulsos al arrancar.
+    digitalWrite(relays[i], RELAY_OFF);
+    pinMode(relays[i], OUTPUT);
+  }
+
+  allOff();
+  Serial.println("Secuencia automatica iniciada");
 }
 
 void loop() {
-  // Enciende el LED
-  digitalWrite(LED_PIN, HIGH);
-  Serial.println("LED Encendido (HIGH)");
-  delay(500); // Espera medio segundo
+  for (int i = 0; i < 4; i++) {
+    allOff();
+    digitalWrite(relays[i], RELAY_ON);
 
-  // Apaga el LED
-  digitalWrite(LED_PIN, LOW);
-  Serial.println("LED Apagado (LOW)");
-  delay(500); // Espera medio segundo
+    Serial.print("LED encendido: ");
+    Serial.println(names[i]);
+
+    delay(interval);
+  }
+
+  allOff();
+  delay(1000);
 }
