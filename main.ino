@@ -8,6 +8,7 @@
 #include "logboot.h"
 #include "eyes.h"
 #include "debug_serial.h"
+#include "motor_leds.h"
 
 bool bootComplete = false;
 unsigned long bootTime = 0;
