@@ -57,6 +57,7 @@ void loop() {
 
     // Los ojos se actualizan cuando los motores estan detenidos.
     debugSerialTick();
+    motorTick();
     if (!motorIsMoving()) {
         updateEyes();
     }
