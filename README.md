@@ -1,7 +1,6 @@
-# 🚀 Starter Kit — ESP32 con Wokwi + PlatformIO
+# 🚀 Starter Kit — ESP32, motores L293D y OLED
 
-> **Repositorio plantilla** para estudiantes de la materia.  
-> Contiene un proyecto básico de parpadeo de LED (Blink) listo para simular en Wokwi y cargar en una placa ESP32 física.
+> Proyecto ESP32 para controlar dos motores mediante un L293D, ajustar su velocidad con PWM y mostrar el movimiento en una pantalla OLED SSD1306. Incluye indicadores LED para probar las salidas en Wokwi.
 
 ---
 
@@ -15,8 +14,9 @@
 6. [Paso 4 — Simular con Wokwi](#paso-4--simular-con-wokwi)
 7. [Paso 5 — Editar el diagrama en wokwi.com](#paso-5--editar-el-diagrama-en-wokwicom)
 8. [Paso 6 — Cargar el código en tu ESP32 físico](#paso-6--cargar-el-código-en-tu-esp32-físico)
-9. [Estructura del proyecto](#estructura-del-proyecto)
-10. [¿Cómo hacer este repositorio tuyo?](#cómo-hacer-este-repositorio-tuyo)
+9. [Control de motores y explicación](#control-de-motores-y-explicación)
+10. [Estructura del proyecto](#estructura-del-proyecto)
+11. [¿Cómo hacer este repositorio tuyo?](#cómo-hacer-este-repositorio-tuyo)
 
 ---
 
@@ -24,10 +24,14 @@
 
 | Archivo / Carpeta | Descripción |
 |---|---|
-| `src/led_blink.ino` | Código principal: parpadeo de LED en GPIO 2 |
-| `diagram.json` | Circuito virtual (ESP32 + resistencia + LED azul) |
+| `src/main.cpp` | Inicializa OLED, animación de ojos, motores y comandos seriales |
+| `motor_pwm.h` | Configura los canales LEDC que regulan la velocidad |
+| `motor_control.h` | Implementa avanzar, retroceder, girar y detener |
+| `display.h`, `eyes.h` | Inicialización y animación de la pantalla OLED |
+| `diagram.json` | Circuito Wokwi con OLED y LEDs indicadores de dirección y PWM |
 | `platformio.ini` | Configuración del proyecto PlatformIO |
 | `wokwi.toml` | Configuración del simulador Wokwi |
+| `config.h` | Pines, frecuencia PWM y velocidad predeterminada |
 | `.gitignore` | Archivos a ignorar en git (excluye `.pio/`) |
 
 ---
@@ -137,9 +141,9 @@ Ve directamente a la sección [¿Cómo hacer este repositorio tuyo?](#cómo-hace
    - Presiona `F1` → escribe `Wokwi: Start Simulator` → Enter
    - O presiona `Ctrl+Shift+P` → `Wokwi: Start Simulator`
 
-5. Verás el circuito simulado: el LED azul debería parpadear cada 500ms
+5. El diagrama muestra los cambios de dirección con cuatro LEDs y la salida PWM con dos LEDs adicionales. Los motores físicos se conectan mediante un L293D; no conectes motores directamente a los GPIO.
 
-6. Abre el **Monitor Serial** en Wokwi para ver los mensajes `LED Encendido / LED Apagado`
+6. Abre el **Monitor Serial** en Wokwi para usar los comandos descritos en la sección [Control de motores y explicación](#control-de-motores-y-explicación).
 
 ---
 
@@ -196,9 +200,58 @@ Si quieres agregar más componentes al circuito (botones, sensores, pantallas, e
      upload_port = COM3   ; cambia por tu puerto
      ```
 
-5. Una vez cargado, el LED de tu ESP32 debería parpadear ✅
+5. Una vez cargado, conecta el L293D según la tabla de pines siguiente; no conectes los motores directamente al ESP32.
 
 6. Abre el **Monitor Serial** de PlatformIO: clic en el ícono 🔌 en la barra inferior → verás los mensajes en tiempo real
+
+---
+
+## Control de motores y explicación
+
+### Conexiones del L293D
+
+| Señal del L293D | GPIO del ESP32 | Función |
+|---|---:|---|
+| IN1 / IN2 | 25 / 26 | Dirección del motor A |
+| IN3 / IN4 | 32 / 27 | Dirección del motor B |
+| EN1,2 (ENA) | 33 | PWM y velocidad del motor A |
+| EN3,4 (ENB) | 14 | PWM y velocidad del motor B |
+| GND | GND | Tierra común con el ESP32 |
+
+Conecta cada motor a las salidas correspondientes del L293D y aliméntalo con una fuente adecuada para los motores. La fuente del motor y el ESP32 deben compartir GND. La pantalla conserva SDA=21 y SCL=22.
+
+### Comandos del monitor serial
+
+| Tecla | Acción |
+|---|---|
+| `w` | Avanzar |
+| `s` | Retroceder |
+| `a` | Girar a la izquierda |
+| `d` | Girar a la derecha |
+| `x` | Detener ambos motores |
+| `+` / `-` | Subir / bajar velocidad en pasos de 25 |
+| `1`–`7` | Seleccionar expresión de ojos (visible cuando el robot está detenido) |
+| `h` | Mostrar la ayuda |
+
+La velocidad se limita a `0–255`; el valor inicial es `180`. Durante el movimiento, la OLED muestra la dirección seleccionada y una barra proporcional al PWM. La animación de ojos se reanuda al detener los motores.
+
+### Demostración rápida
+
+1. Inicia el simulador Wokwi y abre el monitor serial a `115200` baudios.
+2. Envía `w`: deben activarse las salidas de avance y la OLED muestra `AVANZAR` con velocidad `180`.
+3. Envía `+` para subir la velocidad; luego `a`, `s` y `d` para comprobar los giros y el retroceso. La OLED debe reflejar cada orden.
+4. Envía `x`: los motores se detienen y vuelve la animación de ojos. Si bajas la velocidad hasta `0`, también se detienen; para moverse de nuevo, selecciona una dirección.
+
+En el código, `moveForward()`, `moveBackward()`, `turnLeft()`, `turnRight()` y `stopMotors()` son las cinco funciones de movimiento. `ledcAttachChannel()` y `ledcWriteChannel()` (o `ledcSetup()`, `ledcAttachPin()` y `ledcWrite()` en versiones anteriores del core) son las funciones LEDC que configuran y escriben el PWM; `turnRight()` no es una función LEDC.
+
+### Cómo funciona el código
+
+- `motor_pwm.h` configura dos canales LEDC a 20 kHz y 8 bits. En Arduino-ESP32 3.x usa `ledcAttachChannel` y `ledcWriteChannel`; en versiones anteriores usa `ledcSetup`, `ledcAttachPin` y `ledcWrite`. En 8 bits, el duty cycle va de 0 (apagado) a 255 (máxima potencia).
+- `motor_control.h` cambia las cuatro entradas de dirección del L293D. Avanzar y retroceder invierten ambos motores; los giros invierten un motor respecto al otro. Antes de cambiar dirección, desactiva el PWM para evitar cambios bruscos.
+- `debug_serial.h` interpreta las teclas sin bloquear el ciclo principal. Cada orden actualiza tanto las salidas como la pantalla.
+- `src/main.cpp` sigue actualizando los ojos solo cuando el robot está detenido; así no se sobrescribe la pantalla de estado durante el movimiento.
+
+En Wokwi, los LEDs sustituyen a los motores y al driver para visualizar las señales. Para probar movimiento real se necesita conectar el L293D y los motores físicamente.
 
 ---
 
@@ -207,12 +260,13 @@ Si quieres agregar más componentes al circuito (botones, sensores, pantallas, e
 ```
 Starter-kit/
 ├── src/
-│   └── led_blink.ino      # Código fuente principal
-├── diagram.json            # Circuito virtual para Wokwi
-├── platformio.ini          # Configuración de PlatformIO
-├── wokwi.toml              # Configuración del simulador
-├── .gitignore              # Archivos excluidos de git
-└── README.md               # Este archivo
+│   └── main.cpp             # Programa principal
+├── motor_pwm.h              # Configuración PWM de los motores
+├── motor_control.h          # Dirección, velocidad y pantalla de estado
+├── config.h                 # Pines y constantes del proyecto
+├── diagram.json             # Circuito de prueba para Wokwi
+├── platformio.ini           # Configuración de PlatformIO
+└── README.md                # Guía del proyecto
 ```
 
 ---

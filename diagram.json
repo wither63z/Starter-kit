@@ -56,6 +56,24 @@
       }
     },
     {
+      "type": "wokwi-led",
+      "id": "ledPwmA",
+      "top": 420,
+      "left": 570,
+      "attrs": {
+        "color": "orange"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledPwmB",
+      "top": 520,
+      "left": 570,
+      "attrs": {
+        "color": "purple"
+      }
+    },
+    {
       "type": "wokwi-resistor",
       "id": "resA",
       "top": 20,
@@ -89,6 +107,26 @@
       "type": "wokwi-resistor",
       "id": "resD",
       "top": 320,
+      "left": 450,
+      "rotate": 90,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "resPwmA",
+      "top": 420,
+      "left": 450,
+      "rotate": 90,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "resPwmB",
+      "top": 520,
       "left": 450,
       "rotate": 90,
       "attrs": {
@@ -209,6 +247,42 @@
     ],
     [
       "ledD:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "esp:33",
+      "resPwmA:1",
+      "blue",
+      []
+    ],
+    [
+      "resPwmA:2",
+      "ledPwmA:A",
+      "orange",
+      []
+    ],
+    [
+      "ledPwmA:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "esp:14",
+      "resPwmB:1",
+      "blue",
+      []
+    ],
+    [
+      "resPwmB:2",
+      "ledPwmB:A",
+      "purple",
+      []
+    ],
+    [
+      "ledPwmB:C",
       "esp:GND.1",
       "black",
       []

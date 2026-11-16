@@ -10,14 +10,19 @@
 #define OLED_HEIGHT 64
 #define OLED_RESET_PIN -1
 
-// L293D: cuatro entradas de control conectadas al ESP32.
-// Los LEDs representan las salidas de los dos motores.
+// L293D: entradas de direccion y habilitaciones PWM de los motores.
 #define MOTOR_A1_PIN 25
 #define MOTOR_A2_PIN 26
 #define MOTOR_B1_PIN 32
 #define MOTOR_B2_PIN 27
-#define MOTOR_LED_INTERVAL_MS 2000
-#define MOTOR_LED_PAUSE_MS 1000
+#define MOTOR_A_ENABLE_PIN 33
+#define MOTOR_B_ENABLE_PIN 14
+#define MOTOR_PWM_FREQUENCY_HZ 20000
+#define MOTOR_PWM_RESOLUTION_BITS 8
+#define MOTOR_PWM_CHANNEL_A 0
+#define MOTOR_PWM_CHANNEL_B 1
+#define MOTOR_DEFAULT_SPEED 180
+#define MOTOR_SPEED_STEP 25
 
 #define EYES_MAX_FPS 60
 #define LOGO_TIME_MS 3000
