@@ -26,3 +26,4 @@
 
 #define EYES_MAX_FPS 60
 #define LOGO_TIME_MS 3000
+#define TURN_90_MS 400  // Tiempo de giro para ~90 grados (calibrar en el robot)

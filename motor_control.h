@@ -23,6 +23,16 @@ inline uint8_t& motorSpeedState() {
     return speed;
 }
 
+inline bool& motorTurnActiveState() {
+    static bool active = false;
+    return active;
+}
+
+inline unsigned long& motorTurnEndState() {
+    static unsigned long endMs = 0;
+    return endMs;
+}
+
 inline bool motorIsMoving() {
     return motorMotionState() != MotorMotion::Stopped;
 }
@@ -68,6 +78,7 @@ inline void setMotorDirection(bool motorAForward, bool motorBForward) {
 }
 
 inline void applyMotorMotion(MotorMotion motion, bool motorAForward, bool motorBForward) {
+    motorTurnActiveState() = false;
     writeMotorPwm(0);
     if (motion == MotorMotion::Stopped || motorSpeedState() == 0) {
         digitalWrite(MOTOR_A1_PIN, LOW);
@@ -96,16 +107,32 @@ inline void moveBackward() {
     applyMotorMotion(MotorMotion::Backward, false, false);
 }
 
+// Giro de ~90 grados: arranca el giro y motorTick() lo detiene a los TURN_90_MS.
+inline void startTurn(MotorMotion motion, bool motorAForward, bool motorBForward) {
+    applyMotorMotion(motion, motorAForward, motorBForward);
+    if (motorIsMoving()) {
+        motorTurnActiveState() = true;
+        motorTurnEndState() = millis() + TURN_90_MS;
+    }
+}
+
 inline void turnLeft() {
-    applyMotorMotion(MotorMotion::Left, false, true);
+    startTurn(MotorMotion::Left, false, true);
 }
 
 inline void turnRight() {
-    applyMotorMotion(MotorMotion::Right, true, false);
+    startTurn(MotorMotion::Right, true, false);
 }
 
 inline void stopMotors() {
     applyMotorMotion(MotorMotion::Stopped, false, false);
+}
+
+inline void motorTick() {
+    if (motorTurnActiveState() && (long)(millis() - motorTurnEndState()) >= 0) {
+        stopMotors();
+        Serial.println(F("[MOTORES] Giro de 90 grados completado"));
+    }
 }
 
 inline void setMotorSpeed(uint8_t speed) {
